@@ -58,5 +58,14 @@ export class ApiCallService {
         .set("Access-Control-Allow-Private-Network","true")}).pipe(catchError(ApiCallService.handleError));
   }
 
+  callInventory(): any {
+    console.log('ApiCallService INVENTORY called');
+    return this.http.get(this.apiUrl + '/player/inventory').pipe(catchError(ApiCallService.handleError));
+  }
+
+  callGold(): any {
+    console.log('ApiCallService INVENTORY GOLD called');
+    return this.http.get(this.apiUrl + '/player/inventory/gold').pipe(catchError(ApiCallService.handleError));
+  }
 
 }

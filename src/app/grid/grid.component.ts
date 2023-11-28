@@ -1,7 +1,10 @@
 import {Component, HostListener, OnInit} from '@angular/core';
 import {MatGridListModule} from '@angular/material/grid-list';
 import {ApiCallService} from "../service/api-call.service";
-import {interval} from "rxjs";
+import {forkJoin, interval} from "rxjs";
+import {MatDialog} from "@angular/material/dialog";
+import {InventoryDalogComponent} from "../inventory-dalog/inventory-dalog.component";
+import {finalize} from "rxjs/operators";
 
 @Component({
   selector: 'app-grid',
@@ -10,7 +13,7 @@ import {interval} from "rxjs";
 })
 export class GridComponent implements OnInit {
 
-  constructor(private apiService:ApiCallService) { }
+  constructor(private apiService:ApiCallService, private dialog: MatDialog) { }
 
   tiles: string[] = [];
   tilesMap = new Map<string,string>([[">","Elevation_Tile"],["|","Gate_Tile"],["$","Mountain_Tile"],
@@ -21,6 +24,8 @@ export class GridComponent implements OnInit {
 
   number_of_tiles = 4;
   sub: any;
+  dialogRef: any = undefined
+
   ngOnInit(): void {
     this.sub = interval(250).subscribe(() => { this.callGridAPI() });
   }
@@ -53,7 +58,43 @@ export class GridComponent implements OnInit {
       this.apiService.callRight().subscribe((res: string) => {});
     } else if(keyCode == "Space") {
       this.apiService.callWait().subscribe((res: string) => {});
+    } else if(keyCode == "ShiftLeft") {
+      this.openDialog();
     }
+
+  }
+
+  openDialog(): void {
+    console.log(this.dialogRef)
+    if(this.dialogRef != undefined) {
+      this.dialogRef.close();
+      return;
+    }
+
+    forkJoin({request1: this.apiService.callInventory(), request2: this.apiService.callGold()}).subscribe(
+      ({request1, request2}) => {
+        console.log(request1);
+        console.log(request2);
+        this.dialogRef = this.dialog.open(InventoryDalogComponent, {
+          width: '500px',
+          data: {inventory: request1,gold: request2}
+        })
+
+        this.dialogRef.afterClosed().subscribe( () => {
+          this.dialogRef = undefined;
+        });
+      }
+    )
+
+
+    // this.dialogRef = this.dialog.open(InventoryDalogComponent, {
+    //   width: '250px',
+    //   data: {inventory: [],gold: 0}
+    // })
+    //
+    // this.dialogRef.afterClosed().subscribe( () => {
+    //   this.dialogRef = undefined;
+    // });
 
   }
 
