@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, HostListener, OnInit} from '@angular/core';
 import {MatGridListModule} from '@angular/material/grid-list';
 import {ApiCallService} from "../service/api-call.service";
 import {interval} from "rxjs";
@@ -32,11 +32,29 @@ export class GridComponent implements OnInit {
   callGridAPI(): void {
     this.apiService.callGrid().subscribe((res: string[][]) => {
       this.tiles = res.reduce((acc,val) => acc.concat(val),[]);
-      console.log(this.tiles);
-      console.log(res.length);
-      console.log(res[0].length);
+      // console.log(this.tiles);
+      // console.log(res.length);
+      // console.log(res[0].length);
       this.number_of_tiles = res[0].length;
     });
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    const keyCode = event.code;
+    console.log(keyCode);
+    if (keyCode == "ArrowUp") {
+      this.apiService.callUp().subscribe((res: string) => {});
+    } else if (keyCode == "ArrowDown") {
+      this.apiService.callDown().subscribe((res: string) => {});
+    } else if (keyCode == "ArrowLeft") {
+      this.apiService.callLeft().subscribe((res: string) => {});
+    } else if(keyCode == "ArrowRight") {
+      this.apiService.callRight().subscribe((res: string) => {});
+    } else if(keyCode == "Space") {
+      this.apiService.callWait().subscribe((res: string) => {});
+    }
+
   }
 
 
