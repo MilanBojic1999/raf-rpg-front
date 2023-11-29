@@ -9,12 +9,14 @@ import {MatGridListModule} from "@angular/material/grid-list";
 import {HttpClientModule} from "@angular/common/http";
 import { InventoryDalogComponent } from './inventory-dalog/inventory-dalog.component';
 import {MatDialog, MatDialogModule} from "@angular/material/dialog";
+import { OverScreenComponent } from './over-screen/over-screen.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     GridComponent,
-    InventoryDalogComponent
+    InventoryDalogComponent,
+    OverScreenComponent
   ],
   imports: [
     BrowserModule,
