@@ -19,6 +19,7 @@ export class GridComponent implements OnInit {
   tilesMap = new Map<string,string>([[">","Elevation_Tile"],["|","Gate_Tile"],["$","Mountain_Tile"],
                                             ["_","Pasture_Tile"],["-","Water_Tile"],["+","Wood_Tile"]]);
 
+  private isOver: boolean = false;
 
   charMap = new Map<string,string>([["B","Barbarian"],["V","Village"],["P","Player_model"], ["M","Merchant"]]);
 
@@ -27,7 +28,7 @@ export class GridComponent implements OnInit {
   dialogRef: any = undefined
 
   ngOnInit(): void {
-    this.sub = interval(250).subscribe(() => { this.callGridAPI() });
+    this.sub = interval(250).subscribe(() => { this.callGridAPI(); this.callIsOver() });
   }
 
   ngOnDestroy() {
@@ -42,6 +43,20 @@ export class GridComponent implements OnInit {
       // console.log(res[0].length);
       this.number_of_tiles = res[0].length;
     });
+  }
+
+  callIsOver(): void {
+    this.apiService.callCheckOver().subscribe((res: boolean) => {
+      this.isOver = res;
+    });
+  }
+
+  statusOfAGame(): string {
+    if (this.isOver) {
+      return "<h1 class='red_text'>Game is over</h1>";
+    } else {
+      return "<h1 class='green_text'>Game in progress</h1>";
+    }
   }
 
   @HostListener('document:keydown', ['$event'])

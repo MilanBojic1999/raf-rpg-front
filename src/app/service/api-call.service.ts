@@ -28,6 +28,11 @@ export class ApiCallService {
     return this.http.get(this.apiUrl + '/full/matrix').pipe(catchError(ApiCallService.handleError));
   }
 
+  callCheckOver(): any{
+    // console.log('ApiCallService callGrid called');
+    return this.http.get(this.apiUrl + '/isover').pipe(catchError(ApiCallService.handleError));
+  }
+
   callUp(): any {
     console.log('ApiCallService UP called');
     return this.http.put(this.apiUrl + '/player/up', {}, {headers: new HttpHeaders().set("Content-Type","application/json")
