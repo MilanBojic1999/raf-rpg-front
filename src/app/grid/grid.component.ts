@@ -5,6 +5,7 @@ import {forkJoin, interval} from "rxjs";
 import {MatDialog} from "@angular/material/dialog";
 import {InventoryDalogComponent} from "../inventory-dalog/inventory-dalog.component";
 import {finalize} from "rxjs/operators";
+import {OverScreenComponent} from "../over-screen/over-screen.component";
 
 @Component({
   selector: 'app-grid',
@@ -48,15 +49,28 @@ export class GridComponent implements OnInit {
   callIsOver(): void {
     this.apiService.callCheckOver().subscribe((res: boolean) => {
       this.isOver = res;
+      if(this.isOver && this.dialogRef == undefined)
+        this.openGameOverDialog();
     });
   }
 
-  statusOfAGame(): string {
-    if (this.isOver) {
-      return "<h1 class='red_text'>Game is over</h1>";
-    } else {
-      return "<h1 class='green_text'>Game in progress</h1>";
+  statusOfAGame(): boolean {
+    return !this.isOver;
+  }
+
+  openGameOverDialog(): void {
+    console.log(this.dialogRef)
+    if(this.dialogRef != undefined) {
+      this.dialogRef.close();
     }
+
+    this.dialogRef = this.dialog.open(OverScreenComponent, {
+      width: '800px',
+    })
+
+    this.dialogRef.afterClosed().subscribe( () => {
+      this.dialogRef = undefined;
+    });
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -100,16 +114,6 @@ export class GridComponent implements OnInit {
         });
       }
     )
-
-
-    // this.dialogRef = this.dialog.open(InventoryDalogComponent, {
-    //   width: '250px',
-    //   data: {inventory: [],gold: 0}
-    // })
-    //
-    // this.dialogRef.afterClosed().subscribe( () => {
-    //   this.dialogRef = undefined;
-    // });
 
   }
 

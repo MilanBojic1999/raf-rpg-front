@@ -25,12 +25,23 @@ export class ApiCallService {
 
   callGrid(): any{
     // console.log('ApiCallService callGrid called');
-    return this.http.get(this.apiUrl + '/full/matrix').pipe(catchError(ApiCallService.handleError));
+    return this.http.get(this.apiUrl + '/map/full/matrix').pipe(catchError(ApiCallService.handleError));
   }
 
   callCheckOver(): any{
     // console.log('ApiCallService callGrid called');
-    return this.http.get(this.apiUrl + '/isover').pipe(catchError(ApiCallService.handleError));
+    return this.http.get(this.apiUrl + '/map/isover').pipe(catchError(ApiCallService.handleError));
+  }
+
+  private getRandomInt(max:number): number {
+    return Math.floor(Math.random() * max);
+  }
+
+  callRestart(): any{
+    let val = this.getRandomInt(5);
+    console.log(`ApiCallService RESTART GAME ${val} called`);
+    return this.http.put(this.apiUrl + `/map/restart?map_number=${val}`, {}, {headers: new HttpHeaders().set("Content-Type","application/json")
+        .set("Access-Control-Allow-Private-Network","true")}).pipe(catchError(ApiCallService.handleError));
   }
 
   callUp(): any {

@@ -10,6 +10,7 @@ import {HttpClientModule} from "@angular/common/http";
 import { InventoryDalogComponent } from './inventory-dalog/inventory-dalog.component';
 import {MatDialog, MatDialogModule} from "@angular/material/dialog";
 import { OverScreenComponent } from './over-screen/over-screen.component';
+import {MatButtonModule} from "@angular/material/button";
 
 @NgModule({
   declarations: [
@@ -18,14 +19,15 @@ import { OverScreenComponent } from './over-screen/over-screen.component';
     InventoryDalogComponent,
     OverScreenComponent
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    BrowserAnimationsModule,
-    MatGridListModule,
-    HttpClientModule,
-    MatDialogModule,
-  ],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        MatGridListModule,
+        HttpClientModule,
+        MatDialogModule,
+        MatButtonModule,
+    ],
   providers: [],
   bootstrap: [AppComponent]
 })

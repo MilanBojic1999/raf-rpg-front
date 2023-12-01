@@ -1,8 +1,3 @@
-<p>grid works!</p>
-<div [innerHTML]="statusOfAGame()">
-
-</div>
-
 <div class="grid_div" [style.width]="calculateWidth()" >
   <mat-grid-list cols="{{number_of_tiles}}" rowHeight="64px" gutterSize="1px">
     <mat-grid-tile *ngFor="let tile of tiles"><img src="{{castToImage(tile)}}" alt="title"/></mat-grid-tile>

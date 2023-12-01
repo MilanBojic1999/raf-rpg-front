@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import {ApiCallService} from "../service/api-call.service";
 
 @Component({
   selector: 'app-over-screen',
@@ -7,9 +8,18 @@ import { Component, OnInit } from '@angular/core';
 })
 export class OverScreenComponent implements OnInit {
 
-  constructor() { }
+  constructor(private apiService:ApiCallService) { }
 
   ngOnInit(): void {
+  }
+
+  restartGame(): void {
+    this.apiService.callRestart().subscribe((res: boolean) => {
+      if(res)
+        console.log("Restarted game");
+      else
+        console.log("Failed to restart game");
+    });
   }
 
 }
