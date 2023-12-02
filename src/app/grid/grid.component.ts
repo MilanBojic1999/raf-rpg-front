@@ -18,7 +18,8 @@ export class GridComponent implements OnInit {
 
   tiles: string[] = [];
   tilesMap = new Map<string,string>([[">","Elevation_Tile"],["|","Gate_Tile"],["$","Mountain_Tile"],
-                                            ["_","Pasture_Tile"],["-","Water_Tile"],["+","Wood_Tile"]]);
+                                            ["_","Pasture_Tile"],["-","Water_Tile"],["+","Wood_Tile"],
+                                            [".","Pasture_Tile_Looted"],["<","Elevation_Tile_Looted"],[":","Wood_Tile_Looted"]]);
 
   private isOver: boolean = false;
 
