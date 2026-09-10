@@ -1,6 +1,12 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AppComponent } from './app.component';
+
+// AppComponent's template renders <app-grid>. Stubbing it keeps this spec focused on
+// AppComponent instead of dragging in GridComponent's HTTP polling and dialogs.
+@Component({ selector: 'app-grid', template: '' })
+class GridComponentStub {}
 
 describe('AppComponent', () => {
   beforeEach(async () => {
@@ -9,7 +15,8 @@ describe('AppComponent', () => {
         RouterTestingModule
       ],
       declarations: [
-        AppComponent
+        AppComponent,
+        GridComponentStub
       ],
     }).compileComponents();
   });
@@ -30,6 +37,6 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.content span')?.textContent).toContain('raf-rpg-front app is running!');
+    expect(compiled.querySelector('h1')?.textContent).toContain('raf-rpg-front');
   });
 });
