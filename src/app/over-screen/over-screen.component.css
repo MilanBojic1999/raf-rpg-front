@@ -1,11 +1,61 @@
-
-.game_over_div {
-  background: #0a0000;
-  align-content: center;
+.over {
+  text-align: center;
 }
 
-.game_over_sign {
+.icon {
+  font-size: 56px;
+  width: 56px;
+  height: 56px;
+  color: var(--bad);
+}
+
+.won .icon {
+  color: var(--gold);
+}
+
+.title {
   font-family: "Times New Roman", serif;
-  font-size: 32px;
-  color: #4F0001;
+  font-size: 34px;
+  margin: 8px 0 4px;
+  color: var(--bad);
+}
+
+.won .title {
+  color: var(--gold);
+}
+
+.subtitle {
+  margin-top: 0;
+  color: var(--muted);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.stats div {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--track);
+}
+
+.label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.mono { font-family: "Roboto Mono", Consolas, monospace; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+
+mat-dialog-actions {
+  flex-wrap: wrap;
+  gap: 6px;
 }

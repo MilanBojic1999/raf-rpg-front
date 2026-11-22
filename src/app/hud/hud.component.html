@@ -1,0 +1,73 @@
+<ng-container *ngIf="state; else noState">
+
+  <section class="card">
+    <div class="row-between">
+      <span class="label">Gold</span>
+      <span><b class="big">{{ state.gold }}</b><span *ngIf="hasGate" class="muted"> / {{ state.gatePrice }} for the gate</span></span>
+    </div>
+    <div class="bar" *ngIf="hasGate" [title]="goldPercent.toFixed(0) + '% of the gate price'">
+      <div class="bar-fill gold" [style.width.%]="goldPercent"></div>
+    </div>
+    <div class="hint ok" *ngIf="canOpenGate && !state.done">Enough gold. Head for the gate!</div>
+    <div class="hint muted" *ngIf="!hasGate">This map has no gate.</div>
+  </section>
+
+  <section class="card stats">
+    <div class="stat" title="Rounds played in this episode">
+      <span class="label">Round</span>
+      <b>{{ state.round }}<span class="muted" *ngIf="state.maxRounds"> / {{ state.maxRounds }}</span></b>
+      <div class="bar thin" *ngIf="state.maxRounds">
+        <div class="bar-fill" [class.danger]="roundPercent > 85" [style.width.%]="roundPercent"></div>
+      </div>
+    </div>
+    <div class="stat" title="Gold the merchant can still spend before its budget refills">
+      <span class="label">Merchant budget</span>
+      <b>{{ state.merchantGold >= 0 ? state.merchantGold : '—' }}</b>
+    </div>
+    <div class="stat" title="What the backpack is worth at full price">
+      <span class="label">Backpack value</span>
+      <b>{{ backpackValue }}</b>
+    </div>
+    <div class="stat" title="Seed and map of this episode. Restart with the same seed to replay it exactly.">
+      <span class="label">Seed · map</span>
+      <b class="mono">{{ state.seed }} · {{ mapNumber !== null ? mapNumber : '?' }}</b>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="label">Backpack</div>
+    <div *ngIf="backpack.length === 0" class="muted empty">Empty. Walk onto unlooted tiles to collect materials.</div>
+    <div class="backpack">
+      <div class="item" *ngFor="let row of backpack; trackBy: trackByName"
+           [title]="row.count + ' × ' + row.name + ' worth ' + row.value + ' each = ' + row.subtotal + ' gold'">
+        <img [src]="row.image" [alt]="row.name">
+        <span class="count">{{ row.count }}</span>
+        <span class="item-name">{{ row.name }}</span>
+        <span class="muted small">{{ row.value }}g</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card log-card">
+    <div class="row-between">
+      <span class="label">Events</span>
+      <span class="muted small" title="The same strings your agent gets in the `events` field">raw API strings</span>
+    </div>
+    <div class="log">
+      <div *ngIf="log.length === 0" class="muted empty">Nothing has happened yet.</div>
+      <div class="log-entry" *ngFor="let entry of log; trackBy: trackByRound">
+        <span class="log-round mono">#{{ entry.round }}</span>
+        <span class="log-events">
+          <span class="event mono" *ngFor="let ev of entry.events" [ngClass]="eventClass(ev)">
+            <img *ngIf="eventMaterial(ev) as img" [src]="img" alt="">{{ ev }}
+          </span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+</ng-container>
+
+<ng-template #noState>
+  <section class="card muted">Waiting for the game state…</section>
+</ng-template>

@@ -1,0 +1,27 @@
+.row {
+  display: flex;
+  gap: 12px;
+}
+
+.row mat-form-field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.session {
+  margin-top: 0;
+}
+
+.config {
+  margin-top: 12px;
+}
+
+.toggles {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.muted { color: var(--muted); }
+.small { font-size: 12px; }

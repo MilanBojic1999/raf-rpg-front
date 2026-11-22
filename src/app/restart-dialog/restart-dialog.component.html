@@ -1,0 +1,68 @@
+<h2 mat-dialog-title>New episode</h2>
+
+<form (ngSubmit)="start()" #form="ngForm">
+  <mat-dialog-content>
+    <p class="muted session">Session <code>{{ gameId }}</code> · <code>PUT /map/restart</code></p>
+
+    <div class="row">
+      <mat-form-field appearance="outline">
+        <mat-label>Map</mat-label>
+        <mat-select [(ngModel)]="options.mapNumber" name="mapNumber">
+          <mat-option *ngFor="let m of maps" [value]="m">Level {{ m }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Seed</mat-label>
+        <input matInput type="number" [(ngModel)]="options.seed" name="seed" placeholder="random">
+        <button mat-icon-button matSuffix type="button" *ngIf="options.seed !== null"
+                (click)="randomizeSeed()" title="Clear: let the server pick a random seed">
+          <mat-icon>close</mat-icon>
+        </button>
+        <mat-hint>Same map + seed + actions = same episode</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <mat-checkbox [(ngModel)]="options.overrideConfig" name="overrideConfig">
+      Override the map's settings
+    </mat-checkbox>
+
+    <div class="config" *ngIf="options.overrideConfig">
+      <div class="row">
+        <mat-form-field appearance="outline">
+          <mat-label>Gate price</mat-label>
+          <input matInput type="number" min="0" [(ngModel)]="options.config.gatePrice" name="gatePrice" required>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Max rounds</mat-label>
+          <input matInput type="number" min="0" [(ngModel)]="options.config.maxRounds" name="maxRounds" required>
+          <mat-hint>0 = no limit</mat-hint>
+        </mat-form-field>
+      </div>
+      <div class="row">
+        <mat-form-field appearance="outline">
+          <mat-label>Merchant budget</mat-label>
+          <input matInput type="number" min="0" [(ngModel)]="options.config.merchantBudget" name="merchantBudget" required>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Budget refills every</mat-label>
+          <input matInput type="number" min="1" [(ngModel)]="options.config.merchantRefillRounds" name="refill" required>
+          <span matSuffix class="muted">rounds</span>
+        </mat-form-field>
+      </div>
+      <div class="toggles">
+        <mat-checkbox [(ngModel)]="options.config.barbarianEnabled" name="barbarian">Barbarians</mat-checkbox>
+        <mat-checkbox [(ngModel)]="options.config.villagerEnabled" name="villager">Villagers</mat-checkbox>
+        <button mat-button type="button" (click)="resetConfig()">Reset to defaults</button>
+      </div>
+      <p class="muted small">
+        Tip: turning barbarians off removes most of the randomness, which helps early in training.
+      </p>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Cancel</button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="!valid">Start</button>
+  </mat-dialog-actions>
+</form>

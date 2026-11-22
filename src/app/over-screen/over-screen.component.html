@@ -1,4 +1,24 @@
-<h3> Over screen </h3>
-    <p class="game_over_sign"> This is the over screen </p>
+<div class="over" [class.won]="data.won">
+  <mat-icon class="icon">{{ data.won ? 'emoji_events' : 'hourglass_bottom' }}</mat-icon>
+  <h2 mat-dialog-title class="title">{{ title }}</h2>
+  <p class="subtitle">{{ subtitle }}</p>
 
-<button mat-stroked-button [mat-dialog-close]="true" (click)="restartGame()">Restart game</button>
+  <mat-dialog-content>
+    <div class="stats">
+      <div><span class="label">Rounds</span><b>{{ data.round }}<span *ngIf="data.maxRounds"> / {{ data.maxRounds }}</span></b></div>
+      <div><span class="label">Gold</span><b>{{ data.gold }}<span *ngIf="data.gatePrice >= 0"> / {{ data.gatePrice }}</span></b></div>
+      <div><span class="label">Map</span><b>{{ data.mapNumber !== null ? data.mapNumber : '?' }}</b></div>
+      <div><span class="label">Seed</span><b class="mono">{{ data.seed }}</b></div>
+    </div>
+    <p class="muted small">Session <code>{{ data.gameId }}</code></p>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="center">
+    <button mat-button [mat-dialog-close]="undefined" title="Close and look at the final board">View board</button>
+    <button mat-stroked-button [mat-dialog-close]="'configure'">Settings…</button>
+    <button mat-stroked-button [mat-dialog-close]="'replay'" title="Same map and seed">Replay seed</button>
+    <button mat-stroked-button [mat-dialog-close]="'next'" *ngIf="data.mapNumber !== null">Next map</button>
+    <button mat-flat-button color="primary" [mat-dialog-close]="'new'" cdkFocusInitial
+            title="Same map, new random seed">New episode</button>
+  </mat-dialog-actions>
+</div>

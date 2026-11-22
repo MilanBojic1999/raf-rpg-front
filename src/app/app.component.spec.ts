@@ -33,10 +33,10 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('raf-rpg-front');
   });
 
-  it('should render title', () => {
+  it('should render the game', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('raf-rpg-front');
+    expect(compiled.querySelector('app-grid')).not.toBeNull();
   });
 });

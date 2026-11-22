@@ -1,87 +1,111 @@
-import { Injectable } from '@angular/core';
-import {HttpClient, HttpErrorResponse, HttpHeaders} from "@angular/common/http";
-import {catchError} from "rxjs/operators";
-import {throwError} from "rxjs";
+import {Injectable} from '@angular/core';
+import {HttpClient, HttpErrorResponse, HttpParams} from '@angular/common/http';
+import {Observable} from 'rxjs';
+import {map} from 'rxjs/operators';
+import {environment} from '../../environments/environment';
+import {Action, GameState, RestartOptions, RestartResponse} from '../models/data';
+
+export const DEFAULT_GAME_ID = 'default';
+
+/**
+ * Where the game server lives, in order of priority:
+ *  1. `?api=http://host:port` in the page URL (handy when the server runs on another machine),
+ *  2. `environment.apiUrl`, if set,
+ *  3. port 8080 on the same host the page was opened from. Using the page's host instead of a
+ *     hard-coded `localhost` keeps the app working when it is opened from another device.
+ */
+export function resolveApiUrl(): string {
+  const fromQuery = new URLSearchParams(window.location.search).get('api');
+  const url = fromQuery || environment.apiUrl || `${window.location.protocol}//${window.location.hostname}:8080`;
+  return url.replace(/\/+$/, '');
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiCallService {
 
-  private readonly apiUrl = 'http://localhost:8080';
+  readonly apiUrl = resolveApiUrl();
 
   constructor(private http: HttpClient) {
-    console.log('ApiCallService constructor called');
   }
 
-  private static handleError(error:HttpErrorResponse){
-    try {
-      console.log('lol', error.error['msg'])
-      return throwError(error.error['msg'])
-    }catch (gre){
-      return throwError(error.error)
+  /** The server treats a missing game_id as the "default" session, so it is only sent for others. */
+  private sessionParams(gameId: string): HttpParams {
+    let params = new HttpParams();
+    if (gameId && gameId !== DEFAULT_GAME_ID) {
+      params = params.set('game_id', gameId);
     }
+    return params;
   }
 
-  callGrid(): any{
-    // console.log('ApiCallService callGrid called');
-    return this.http.get(this.apiUrl + '/map/full/matrix').pipe(catchError(ApiCallService.handleError));
+  /** Full observation without playing a round (GET /game/state). */
+  getState(gameId: string): Observable<GameState> {
+    return this.http.get<GameState>(`${this.apiUrl}/game/state`, {params: this.sessionParams(gameId)});
   }
 
-  callCheckOver(): any{
-    // console.log('ApiCallService callGrid called');
-    return this.http.get(this.apiUrl + '/map/isover').pipe(catchError(ApiCallService.handleError));
+  /** Asynchronous mode: queues the action, the session's thread plays it later (PUT /player/up, ...). */
+  move(action: Action, gameId: string): Observable<unknown> {
+    return this.http.put(`${this.apiUrl}/player/${action.toLowerCase()}`, {}, {params: this.sessionParams(gameId)});
   }
 
-  private getRandomInt(max:number): number {
-    return Math.floor(Math.random() * max);
+  /**
+   * Step mode: one call is one full environment transition (POST /game/step).
+   * After the first call the session stays in step mode until the next restart.
+   */
+  step(action: Action, gameId: string): Observable<GameState> {
+    const params = this.sessionParams(gameId).set('action', action);
+    return this.http.post<GameState>(`${this.apiUrl}/game/step`, {}, {params});
   }
 
-  callRestart(): any{
-    let val = this.getRandomInt(5);
-    console.log(`ApiCallService RESTART GAME ${val} called`);
-    return this.http.put(this.apiUrl + `/map/restart?map_number=${val}`, {}, {headers: new HttpHeaders().set("Content-Type","application/json")
-        .set("Access-Control-Allow-Private-Network","true")}).pipe(catchError(ApiCallService.handleError));
+  /** Creates the session if it does not exist, otherwise resets it (PUT /map/restart). */
+  restart(gameId: string, options: RestartOptions): Observable<RestartResponse> {
+    let params = this.sessionParams(gameId).set('map_number', String(options.mapNumber));
+    if (options.seed !== null && options.seed !== undefined && !isNaN(options.seed)) {
+      params = params.set('seed', String(Math.trunc(options.seed)));
+    }
+    if (options.overrideConfig) {
+      const c = options.config;
+      params = params
+        .set('gate_price', String(c.gatePrice))
+        .set('merchant_budget', String(c.merchantBudget))
+        .set('merchant_refill_rounds', String(c.merchantRefillRounds))
+        .set('barbarian_enabled', String(c.barbarianEnabled))
+        .set('villager_enabled', String(c.villagerEnabled))
+        .set('max_rounds', String(c.maxRounds));
+    }
+    return this.http.put<RestartResponse>(`${this.apiUrl}/map/restart`, {}, {params});
   }
 
-  callUp(): any {
-    console.log('ApiCallService UP called');
-    return this.http.put(this.apiUrl + '/player/up', {}, {headers: new HttpHeaders().set("Content-Type","application/json")
-        .set("Access-Control-Allow-Private-Network","true")}).pipe(catchError(ApiCallService.handleError));
+  /** Session ids on the server (GET /game/sessions). Accepts a list of ids or of objects with an id. */
+  sessions(): Observable<string[]> {
+    return this.http.get<unknown>(`${this.apiUrl}/game/sessions`).pipe(
+      map(res => ApiCallService.parseSessionIds(res))
+    );
   }
 
-  callDown(): any {
-    console.log('ApiCallService DOWN called');
-    return this.http.put(this.apiUrl + '/player/down', {}, {headers: new HttpHeaders().set("Content-Type","application/json")
-        .set("Access-Control-Allow-Private-Network","true")}).pipe(catchError(ApiCallService.handleError));
+  static parseSessionIds(res: any): string[] {
+    let list: any[] = [];
+    if (Array.isArray(res)) {
+      list = res;
+    } else if (res && Array.isArray(res.sessions)) {
+      list = res.sessions;
+    } else if (res && typeof res === 'object') {
+      list = Object.keys(res);
+    }
+    const ids = list
+      .map(item => typeof item === 'string' ? item : (item?.gameId ?? item?.game_id ?? item?.id))
+      .filter((id: unknown): id is string => typeof id === 'string' && id.length > 0);
+    return Array.from(new Set(ids)).sort();
   }
 
-  callLeft(): any {
-    console.log('ApiCallService LEFT called');
-    return this.http.put(this.apiUrl + '/player/left', {}, {headers: new HttpHeaders().set("Content-Type","application/json")
-        .set("Access-Control-Allow-Private-Network","true")}).pipe(catchError(ApiCallService.handleError));
+  /** Human-readable explanation of a failed request. */
+  describeError(error: HttpErrorResponse): string {
+    if (error.status === 0) {
+      return `Cannot reach the game server at ${this.apiUrl}. Is it running?`;
+    }
+    const body = error.error;
+    const serverMessage = typeof body === 'string' ? body : (body?.msg || body?.message || body?.error);
+    return `${error.status} ${error.statusText || ''}${serverMessage ? ': ' + serverMessage : ''}`.trim();
   }
-
-  callRight(): any {
-    console.log('ApiCallService RIGHT called');
-    return this.http.put(this.apiUrl + '/player/right', {}, {headers: new HttpHeaders().set("Content-Type","application/json")
-      .set("Access-Control-Allow-Private-Network","true")}).pipe(catchError(ApiCallService.handleError));
-  }
-
-  callWait(): any {
-    console.log('ApiCallService WAIT called');
-    return this.http.put(this.apiUrl + '/player/wait', {}, {headers: new HttpHeaders().set("Content-Type","application/json")
-        .set("Access-Control-Allow-Private-Network","true")}).pipe(catchError(ApiCallService.handleError));
-  }
-
-  callInventory(): any {
-    console.log('ApiCallService INVENTORY called');
-    return this.http.get(this.apiUrl + '/player/inventory').pipe(catchError(ApiCallService.handleError));
-  }
-
-  callGold(): any {
-    console.log('ApiCallService INVENTORY GOLD called');
-    return this.http.get(this.apiUrl + '/player/inventory/gold').pipe(catchError(ApiCallService.handleError));
-  }
-
 }

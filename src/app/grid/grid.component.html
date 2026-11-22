@@ -1,13 +1,109 @@
-<div class="grid_div" [style.width]="calculateWidth()" >
-  <mat-grid-list cols="{{number_of_tiles}}" rowHeight="64px" gutterSize="1px">
-    <mat-grid-tile *ngFor="let tile of tiles"><img src="{{castToImage(tile)}}" alt="title"/></mat-grid-tile>
-<!--    <mat-grid-tile></mat-grid-tile>-->
-<!--    <mat-grid-tile><img src="assets/game tiles/Mountain_Tile.png" alt="title"/></mat-grid-tile>-->
-<!--    <mat-grid-tile><img src="assets/game tiles/Water_Tile.png" alt="title"/></mat-grid-tile>-->
-<!--    <mat-grid-tile><img src="assets/game tiles/Pasture_Tile.png" alt="title"/></mat-grid-tile>-->
-  </mat-grid-list>
+<header class="topbar">
+  <h1 class="brand">RAF Deep RPG</h1>
+
+  <label class="session" title="game_id of the session to show. Use the same id as your agent to watch it play.">
+    <span class="label">Session</span>
+    <input class="session-input mono" list="session-list" spellcheck="false" autocomplete="off"
+           [(ngModel)]="gameIdInput"
+           (focus)="refreshSessions()"
+           (change)="switchSession(gameIdInput)"
+           (keydown.enter)="$any($event.target).blur()">
+    <datalist id="session-list">
+      <option *ngFor="let id of sessions" [value]="id"></option>
+    </datalist>
+  </label>
+
+  <span class="status" [ngClass]="connection" [title]="'Game server: ' + apiUrl">
+    <span class="dot"></span>{{ connectionLabel }}
+  </span>
+
+  <span class="spacer"></span>
+
+  <button mat-flat-button color="primary" (click)="openRestartDialog()" title="Start or reset this session (R)">
+    <mat-icon>restart_alt</mat-icon> New episode
+  </button>
+</header>
+
+<div class="banner error" *ngIf="error" role="alert">
+  <mat-icon>error_outline</mat-icon><span>{{ error }}</span>
+</div>
+<div class="banner notice" *ngIf="notice" role="status">
+  <mat-icon>info</mat-icon><span>{{ notice }}</span>
+  <button mat-icon-button class="close" (click)="notice = null" aria-label="Dismiss"><mat-icon>close</mat-icon></button>
 </div>
 
-<!--<input (keydown)="onKeyDown($event)">-->
+<main class="layout">
+  <section class="board-area">
+    <div class="board" *ngIf="cells.length; else emptyBoard"
+         [class.finished]="state?.done"
+         [style.grid-template-columns]="'repeat(' + cols + ', ' + tileSize + 'px)'"
+         [style.grid-auto-rows.px]="tileSize">
+      <div class="cell" *ngFor="let cell of cells; trackBy: trackByIndex" [class.fog]="cell.fog" [title]="cell.title">
+        <img *ngIf="cell.image; else unknownSymbol" [src]="cell.image" alt="" draggable="false">
+        <ng-template #unknownSymbol><span class="unknown mono">{{ cell.symbol }}</span></ng-template>
+      </div>
+    </div>
 
+    <ng-template #emptyBoard>
+      <div class="board-empty">
+        <ng-container [ngSwitch]="connection">
+          <p *ngSwitchCase="'offline'">
+            Cannot reach the game server at <code>{{ apiUrl }}</code>.<br>
+            Start the server, or open this page with <code>?api=http://host:8080</code>.
+          </p>
+          <p *ngSwitchDefault>{{ error ? 'No board to show.' : 'Loading the board…' }}</p>
+        </ng-container>
+      </div>
+    </ng-template>
 
+    <div class="pad" *ngIf="state" aria-label="Movement buttons">
+      <!-- mousedown.preventDefault keeps focus off the buttons, so Space does not re-click them -->
+      <button mat-stroked-button (mousedown)="$event.preventDefault()" (click)="act('LEFT')" title="Left (← / A)"><mat-icon>west</mat-icon></button>
+      <button mat-stroked-button (mousedown)="$event.preventDefault()" (click)="act('UP')" title="Up (↑ / W)"><mat-icon>north</mat-icon></button>
+      <button mat-stroked-button (mousedown)="$event.preventDefault()" (click)="act('WAIT')" title="Wait (Space)"><mat-icon>hourglass_empty</mat-icon></button>
+      <button mat-stroked-button (mousedown)="$event.preventDefault()" (click)="act('DOWN')" title="Down (↓ / S)"><mat-icon>south</mat-icon></button>
+      <button mat-stroked-button (mousedown)="$event.preventDefault()" (click)="act('RIGHT')" title="Right (→ / D)"><mat-icon>east</mat-icon></button>
+      <span class="muted small pos">Player at {{ playerPosition }}</span>
+    </div>
+  </section>
+
+  <aside class="side">
+    <app-hud [state]="state" [mapNumber]="mapNumber" [log]="log"></app-hud>
+
+    <section class="card">
+      <div class="label">Controls</div>
+      <div class="control-row">
+        <mat-button-toggle-group [value]="controlMode" (change)="setControlMode($event.value)" aria-label="Control mode">
+          <mat-button-toggle value="async" title="PUT /player/up ... (queued, played by the session thread)">Async</mat-button-toggle>
+          <mat-button-toggle value="step" title="POST /game/step (one call = one round, like env.step())">Step</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+      <div class="control-row">
+        <mat-checkbox [(ngModel)]="showView" (change)="onViewChange()">Agent view (V)</mat-checkbox>
+        <label class="radius" *ngIf="showView" title="Same as GET /player/view?radius=r">
+          radius <input class="mono" type="number" min="0" max="12" [(ngModel)]="viewRadius" (change)="onViewChange()">
+          <span class="muted">= {{ viewRadius * 2 + 1 }}×{{ viewRadius * 2 + 1 }}</span>
+        </label>
+      </div>
+      <div class="keys muted small">
+        <span><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move</span>
+        <span><kbd>Space</kbd> wait</span>
+        <span><kbd>R</kbd> new episode</span>
+        <span><kbd>V</kbd> agent view</span>
+      </div>
+    </section>
+
+    <details class="card legend">
+      <summary class="label">Legend</summary>
+      <div class="legend-grid">
+        <div class="legend-item" *ngFor="let item of legend" [title]="item.description">
+          <img [src]="item.image" alt="">
+          <code>{{ item.symbol }}</code>
+          <span>{{ item.name }}</span>
+        </div>
+      </div>
+      <p class="muted small">Hover a tile on the map for its loot odds and coordinates. Looted tiles:
+        <code>.</code> <code>:</code> <code>&lt;</code> <code>^</code></p>
+    </details>
+  </aside>
+</main>

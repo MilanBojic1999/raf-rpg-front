@@ -1,5 +1,40 @@
 # RafRpgFront
 
+Browser frontend for the RAF-Deep-RPG game server (see `game_documentation.tex`). Use it to play the
+game by hand, or to **watch your RL agent play** while it trains.
+
+## Using the frontend
+
+- **Server address.** By default the app talks to port `8080` on the same host the page was opened
+  from. To point it elsewhere, open the page with `?api=http://host:8080`, or set `apiUrl` in
+  `src/environments/environment.ts`.
+- **Sessions (`game_id`).** The *Session* box in the top bar picks which game to show. `default` is
+  the one the frontend has always shown. Type your agent's id (e.g. `env_0`) to watch the agent play
+  live. The list is filled from `GET /game/sessions`. You can also open `?game_id=env_0` directly,
+  one browser tab per environment.
+- **New episode (`R`).** Choose the level (0–5), the seed (leave it empty for a random seed) and,
+  optionally, override the level settings: gate price, merchant budget and refill, barbarians,
+  villagers, max rounds. The seed and level are shown in the side panel, and the game-over screen
+  can replay the same seed exactly.
+- **Controls.** Arrows or WASD to move, Space to wait. *Async* sends `PUT /player/*` (the frontend's
+  original mode). *Step* sends `POST /game/step`, which makes exactly the transitions your agent
+  gets. A session stays in step mode until it is restarted. Moving in a session that an agent drives
+  through `/game/step` returns `409`, and the app tells you so.
+- **Agent view (`V`).** Dims everything outside the `(2r+1)×(2r+1)` window that
+  `GET /player/view?radius=r` would return.
+- **Side panel.** Gold compared with the gate price, rounds compared with the limit, the merchant's
+  budget, the backpack and its value, and an event log. The log shows the raw `events` strings, so
+  you can check your reward shaping. In async mode the log polls every 200 ms, so a fast agent can
+  skip rounds in it.
+- Hover a tile to see its coordinates and loot odds.
+
+## Tests
+
+```
+npm test                                     # Karma, opens Chrome
+npx ng test --watch=false --browsers=ChromeHeadless
+```
+
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.2.9.
 
 ## Development server
